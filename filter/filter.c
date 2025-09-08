@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 
 #ifndef BUFFER_SIZE
 # define BUFFER_SIZE 2
@@ -13,26 +14,45 @@ void	ft_filter(char *line, char *sub);
 
 int	main(int ac, char **av)
 {
-	char	line[999999];
+	char	*line;
 	int		r = 1;
 	int		i = 0;
+	int		total_len;
 
 	if (ac != 2)
 		return (1);
 	if (av[1][0] == 0)
 		return (1);
 	
+	line = malloc(sizeof(char));
+	if (!line)
+	{
+		perror("Error");
+		return (1);
+	}
+	line[i] = 0;
+	total_len = BUFFER_SIZE + 1;
 	while (r > 0)
 	{
+		line = realloc(line, total_len);
+		if (!line)
+		{
+			perror("Error");
+			return (1);
+		}
 		r = read(0, &line[i], BUFFER_SIZE);
 		if (r < 0)
 		{
-			perror("Error: ");
+			perror("Error");
 			return (1);
 		}
+		total_len += BUFFER_SIZE;
 		i += r;
 	}
+	line[i] = 0;
 	ft_filter(line, av[1]);
+	free(line);
+	return (0);
 }
 
 void	ft_filter(char *line, char *sub)
