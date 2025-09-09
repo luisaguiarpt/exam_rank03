@@ -5,8 +5,10 @@
 int	ft_strlen(char *str);
 void	sort_string(char *str);
 void	swap_char(char *a, char *b);
-
 void	strcopy(char *dest, char *orig);
+int	next_permutation(char *str);
+void	reverse(char *str);
+
 int	main(int ac, char **av)
 {
 	if (ac != 2)
@@ -16,6 +18,7 @@ int	main(int ac, char **av)
 	if (av[1][1] == 0)
 	{
 		write(1, av[1], 1);
+		write(1, "\n", 1);
 		return (0);
 	}
 	char	*str = malloc(sizeof(char) * (ft_strlen(av[1]) + 1));
@@ -24,13 +27,47 @@ int	main(int ac, char **av)
 	strcopy(str, av[1]);
 	sort_string(str);
 	printf("%s\n", str);
+	while (next_permutation(str))
+		printf("%s\n", str);
 }
 
-void	next_permutation(char *str)
+int	next_permutation(char *str)
 {
-	int	i, j = 0;
+	int	i = ft_strlen(str) - 2; 
+	int	j = ft_strlen(str) - 1;
 
-	while (str[i] < str[i + 1])
+	// find pivot
+	while (i >= 0 && str[i] >= str[i + 1])
+		i--;
+	if (i < 0)
+		return (0);
+	//find successor
+	while (str[j] <= str[i])
+		j--;
+	//swap pivot and successor
+	swap_char(&str[j], &str[i]);
+	// reverse the suffix (everything after the recently swapped successor)
+	reverse(&str[i + 1]);
+	return (1);
+}
+
+void	reverse(char *str)
+{
+	int	len = ft_strlen(str);
+	int i = 0;
+	int	j = len - 1;
+	char	temp;
+
+	while (i < len)
+	{
+		temp = str[i];
+		str[i] = str[j];
+		str[j] = temp;
+		i++;
+		j--;
+		if (i >= j)
+			break;
+	}
 }
 
 void	strcopy(char *dest, char *orig)
