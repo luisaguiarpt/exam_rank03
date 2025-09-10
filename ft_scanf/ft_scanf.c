@@ -24,7 +24,7 @@ int match_char(FILE *f, char c)
 	if (ch == c)
 		return (1);
 	if (ch != EOF)
-		ungetc(c, f);
+		ungetc(ch, f);
     return (0);
 }
 
@@ -33,7 +33,7 @@ int scan_char(FILE *f, va_list ap)
 	int c = fgetc(f);
 	if (c == -1)
 		return (0);
-	int	*dest = va_arg(ap, int *);
+	char *dest = va_arg(ap, char *);
 	*dest = c;
     return (1);
 }
@@ -51,11 +51,20 @@ int scan_int(FILE *f, va_list ap)
 			sign = -1;
 		c = fgetc(f);
 	}
+	if (c == EOF)
+		return (0);
+	if (!isdigit(c))
+	{
+		ungetc(c, f);
+		return (0);
+	}
 	while (isdigit(c))
 	{
 		value = 10 * value + c - '0';
 		c = fgetc(f);
 	}
+	if (c != EOF)
+		ungetc(c, f);
 	int *dst = va_arg(ap, int *);
 	*dst = value * sign;
     return (1);
@@ -65,7 +74,7 @@ int scan_string(FILE *f, va_list ap)
 {
 	int	i = 0;
 	char	*dst = va_arg(ap, char *);
-	char c = fgetc(f);
+	int	c = fgetc(f);
 
 	if (c == -1)
 		return (0);
