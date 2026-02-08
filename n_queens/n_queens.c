@@ -1,73 +1,62 @@
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-void	place_queen(int *columns, int *diag1, int *diag2, int *p, int row, int col, int n);
-int	is_valid(int *columns, int *diag1, int *diag2, int row, int col, int n);
+int	is_safe(int row, int col, int *board);
+void	print_board(int *board, int n);
+int	solve(int n, int row, int *board);
 
 int	main(int ac, char **av)
 {
 	if (ac != 2)
 		return (1);
-	int	n = atoi(av[1]);
-	if (n == 1)
-	{
-		fprintf(stdout, "0\n");
-		return (0);
-	}
-	else if (n < 4)
-		return (0);
-	int *columns = calloc(sizeof(int), n);
-	if (!columns)
-		return (1);
-	int	*diag1 = calloc(sizeof(int), (2 * n - 1));
-	if (!diag1)
-		return (1);
-	int	*diag2 = calloc(sizeof(int), (2 * n - 1));
-	if (!diag2)
-		return (1);
-	int	*p = calloc(sizeof(int), n);
-	if (!p)
-		return (1);
-	place_queen(columns, diag1, diag2, p, 0, 0, n);
-	free(columns);
-	free(diag1);
-	free(diag2);
-	free(p);
+
+	int	n;
+	int	board[10];
+
+	n = atoi(av[1]);
+	for (int i = 0; i < n; i++)
+		board[i] = 0;
+	solve(n, 0, board);
 }
 
-void	place_queen(int *columns, int *diag1, int *diag2, int *p, int row, int col, int n)
+void	print_board(int *board, int n)
+{
+	for (int i = 0; i < n; i++)
+	{
+		printf("%d", board[i]);
+		if (i != n)
+			printf(" ");
+	}
+	printf("\n");
+}
+
+int	solve(int n, int row, int *board)
 {
 	if (row == n)
+		print_board(board, n);
+	for (int col = 0; col < n; col++)
 	{
-		int i = 0;
-		while (i < n - 1)
-			fprintf(stdout, "%i ", p[i++]);
-		fprintf(stdout, "%i\n", p[i]);
-		return ;
-	}
-	int	d1, d2;
-	while (col < n)
-	{
-		d1 = row + col;
-		d2 = row - col + n - 1;
-		if (is_valid(columns, diag1, diag2, row, col, n))
+		if (is_safe(row, col, board))
 		{
-			columns[col] = diag1[d1] = diag2[d2] = 1;
-			p[row] = col;
-			place_queen(columns, diag1, diag2, p, row + 1, 0, n);
-			columns[col] = diag1[d1] = diag2[d2] = 0;
+			board[row] = col;
+			if (solve(n, row + 1, board))
+				return (1);
 		}
-		col++;
 	}
+	return (0);
 }
 
-int	is_valid(int *columns, int *diag1, int *diag2, int row, int col, int n)
+int	is_safe(int row, int col, int *board)
 {
-	int d1 = row + col;
-	int d2 = row - col + n - 1;
+	int	i = 0;
 
-	if (diag1[d1] || diag2[d2] || columns[col])
-		return (0);
+	while (i < row)
+	{
+		if (board[i] == col)
+			return (0);
+		if (board[i] - i == col - row || board[i] + i == col + row)
+			return (0);
+		i++;
+	}
 	return (1);
 }
