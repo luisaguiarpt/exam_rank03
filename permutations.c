@@ -66,7 +66,7 @@ int	permute(char *str, int curr_i)
 		return (1);
 	}
 	int	i = curr_i;
-	while (i <= ft_strlen(str))
+	while (i < ft_strlen(str))
 	{
 		swap(&str[i], &str[curr_i]);
 		permute(str, curr_i + 1);
