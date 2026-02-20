@@ -1,62 +1,60 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int	is_safe(int row, int col, int *board);
-void	print_board(int *board, int n);
-int	solve(int n, int row, int *board);
-
-int	main(int ac, char **av)
+int	is_safe(int *board, int row, int col)
 {
-	if (ac != 2)
-		return (1);
-
-	int	n;
-	int	board[10];
-
-	n = atoi(av[1]);
-	for (int i = 0; i < n; i++)
-		board[i] = 0;
-	solve(n, 0, board);
+	int i = 0;
+	while (i < col)
+	{
+		if (board[i] == row)
+			return 0;
+		if (board[i] - i == row - col || board[i] + i == row + col)
+			return 0;
+		i++;
+	}
+	return 1;
 }
 
-void	print_board(int *board, int n)
+void	print(int *board, int size)
 {
-	for (int i = 0; i < n; i++)
+	int i = 0;
+
+	while (i < size)
 	{
-		printf("%d", board[i]);
-		if (i != n)
+		if (i)
 			printf(" ");
+		printf("%d", board[i]);
+		i++;
 	}
 	printf("\n");
 }
 
-int	solve(int n, int row, int *board)
+int	solve(int *board, int col, int size)
 {
-	if (row == n)
-		print_board(board, n);
-	for (int col = 0; col < n; col++)
+	if (col == size)
+		print(board, size);
+	for (int row = 0; row < size; row++)
 	{
-		if (is_safe(row, col, board))
+		board[col] = row;
+		if (is_safe(board, row, col))
 		{
-			board[row] = col;
-			if (solve(n, row + 1, board))
+			if (solve(board, col + 1, size))
 				return (1);
 		}
 	}
-	return (0);
+	return 0;
 }
 
-int	is_safe(int row, int col, int *board)
+int	main(int ac, char **av)
 {
-	int	i = 0;
+	if (ac != 2 || !av[1][0])
+		return 1;
 
-	while (i < row)
-	{
-		if (board[i] == col)
-			return (0);
-		if (board[i] - i == col - row || board[i] + i == col + row)
-			return (0);
-		i++;
-	}
-	return (1);
+	int n = atoi(av[1]);
+
+	int	*board = calloc(n, sizeof(int));
+	if (!board)
+		return 1;
+	solve(board, 0, n);
+	free(board);
 }

@@ -1,52 +1,62 @@
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdlib.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <string.h>
 #include <stdio.h>
-#define BUFFER_SIZE 8192 
+
+#ifndef BUFFER_SIZE
+# define BUFFER_SIZE 8192
+#endif
+
+void	replace(char *str, size_t size, char *pattern)
+{
+	size_t	pattern_len = strlen(pattern);
+	size_t	i = 0;
+	char	*match;
+
+	while (i < size)
+	{
+		if ((match = memmem(str + i, pattern_len, pattern, pattern_len)))
+		{
+			for (size_t j = 0; j < pattern_len; j++)
+				str[i + j] = '*';
+		}
+		i++;
+	}
+}
 
 int	main(int ac, char **av)
 {
 	char	buffer[BUFFER_SIZE];
-	char	*ptr_match;
-	char	*ptr_buffer;
-	ssize_t	chunk;
-	size_t	pattern_len;
-	size_t	i;
-	size_t	res_len = 0;
-	char	*pattern;
+	ssize_t	bytes_read;
+	size_t	accumulated = 0;
 
-	if (ac != 2 || !av[1] || !av[1][0])
-		return (1);
+	if (ac != 2 || av[1][0] == 0)
+		return 1;
 
-	pattern = av[1];
-	pattern_len = strlen(pattern);
-	
-	while ((chunk = read(0, buffer + res_len, sizeof(buffer) - res_len)) > 0)
+	char	*pattern = av[1];
+	size_t	pattern_len = strlen(pattern);
+
+	while ((bytes_read = read(0, buffer + accumulated, sizeof(buffer) - accumulated)) > 0)
 	{
-		res_len += chunk;
-		ptr_buffer = buffer;
-
-		while ((ptr_match = memmem(ptr_buffer, res_len - (ptr_buffer - buffer), pattern, pattern_len)))
-		{
-			write(1, ptr_buffer, ptr_match - ptr_buffer);
-
-			i = 0;
-			while (i++ < pattern_len)
-				write(1, "*", 1);
-			
-			ptr_buffer = ptr_match + pattern_len;
-		}
-		res_len -= (ptr_buffer - buffer);
-
-		memmove(buffer, ptr_buffer, res_len);
+		accumulated += bytes_read;
+		if (accumulated < pattern_len)
+			continue;
+		replace(buffer, accumulated - pattern_len, pattern);
+		write(1, buffer, accumulated - pattern_len);
+		memmove(buffer, buffer + accumulated - pattern_len, accumulated - pattern_len);
+		accumulated = pattern_len;
 	}
-	if (chunk < 0)
+	if (bytes_read < 0)
 	{
 		perror("Error");
-		return (1);
+		return 1;
 	}
-	write(1, buffer, res_len);
-	return (0);
+	if (accumulated > 0)
+	{
+		replace(buffer, accumulated, pattern);
+		write(1, buffer, accumulated);
+	}
+	return 0;
 }
+

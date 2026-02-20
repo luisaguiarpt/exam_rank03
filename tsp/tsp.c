@@ -13,62 +13,52 @@ float    distance(float a[2], float b[2])
     return sqrtf((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]));
 }
 
-float	total_dist(float (*array)[2], int *route, ssize_t size)
+float	best_dist = FLT_MAX;
+float	tmp_dist;
+
+float	calc_dist(float (*cities)[2], ssize_t size)
 {
-	float	total = 0;
-	int	i = 0;
-
-	while (i < size - 1)
-	{
-		total += distance(array[route[i]], array[route[i + 1]]);
-		i++;
-	}
-	total += distance(array[route[0]], array[route[i]]);
-	return (total);
-}
-void	solve(float (*coords)[2], int *route, ssize_t curr_i, ssize_t size, float *best_dist);
-
-float tsp(float (*coords)[2], ssize_t size)
-{
-	if (size < 2)
-		return (0);
-    float best_distance;
-	int	*route= calloc(sizeof(int), size);
-	if (!route)
-		return (-1);
-
-	for (int i = 0; i < size; i++)
-		route[i] = i;
-
-	best_distance = total_dist(coords, route, size);
-	solve(coords, route, 1, size, &best_distance);
-    return (best_distance);
+	float dist = 0;
+	for (ssize_t i = 0; i < size - 1; i++)
+		dist += distance(cities[i], cities[i + 1]);
+	dist += distance(cities[size - 1], cities[0]);
+	return dist;
 }
 
-void	solve(float (*coords)[2], int *route, ssize_t curr_i, ssize_t size, float *best_dist)
+void	swap(float city1[2], float city2[2])
 {
-	float	dist;
-	int	i;
-	int	temp;
+	float	tmp[2];
 
-	if (curr_i == size)
+	tmp[0] = city1[0];
+	tmp[1] = city1[1];
+	city1[0] = city2[0];
+	city1[1] = city2[1];
+	city2[1] = tmp[1];
+	city2[0] = tmp[0];
+}
+
+void	permute(float (*cities)[2], ssize_t start, ssize_t size)
+{
+	if (start == size)
 	{
-		dist = total_dist(coords, route, size);
-		if (dist < *best_dist)
-			*best_dist = dist;
+		tmp_dist = calc_dist(cities, size);
+		if (tmp_dist < best_dist)
+			best_dist = tmp_dist;
 		return ;
 	}
-	i = curr_i;
-	while (i < size)
+	
+	for (ssize_t i = start; i < size; i++)
 	{
-		temp = route[curr_i];
-		route[curr_i] = route[i];
-		route[i] = temp;
-		solve(coords, route, curr_i + 1, size, best_dist);
-		route[i] = route[curr_i];
-		route[curr_i] = temp;
-		i++;
+		swap(cities[i], cities[start]);
+		permute(cities, start + 1, size);
+		swap(cities[i], cities[start]);
 	}
+}
+
+float tsp(float (*cities)[2], ssize_t size)
+{
+	permute(cities, 0, size);
+    return (best_dist);
 }
 
 ssize_t    file_size(FILE *file)
@@ -141,7 +131,8 @@ int        main(int ac, char **av)
         return 1;
     }
     if (ac > 1)
-		fclose(file);
+        fclose(file);
+
     printf("%.2f\n", tsp(array, size));
     free(array);
     return (0);

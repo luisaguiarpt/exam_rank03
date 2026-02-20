@@ -1,78 +1,66 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-int	get_sum(int *s, int *mask, int size);
-void	powerset(int n, int *s, int i, int *mask, int size);
-void	print_subset(int size, int *s, int *mask);
+int	calc_total(int size, int *set, int *mask)
+{
+	int	tot = 0;
+
+	for (int i = 0; i < size; i++)
+		tot += mask[i] * set[i];
+	return (tot);
+}
+
+void	print_sub(int size, int *set, int *mask)
+{
+	int	flag = 0;
+	for (int i = 0; i < size; i++)
+	{
+		if (mask[i])
+		{
+			if (flag)
+				printf(" ");
+			printf("%d", set[i]);
+			flag = 1;
+		}
+	}
+	printf("\n");
+}
+
+void	powerset(int curr_i, int n, int size, int *set, int *mask)
+{
+	if (calc_total(size, set, mask) == n)
+		print_sub(size, set, mask);
+	for (int i = curr_i; i < size; i++)
+	{
+		mask[i] = 1;
+		powerset(i + 1, n, size, set, mask);
+		mask[i] = 0;
+	}
+}
 
 int	main(int ac, char **av)
 {
-	if (ac < 2)
+	if (ac < 3)
 		return (1);
-	int n = atoi(av[1]);
+
+	int	n = atoi(av[1]);
+
 	int	size = ac - 2;
-	int *s = calloc(sizeof(int), size);
-	if (!s)
+
+	int	*set = calloc(1, sizeof(int) * size);
+	if (!set)
 		return (1);
-	int i = 2;
-	while (i < ac)
-	{
-		s[i - 2] = atoi(av[i]);
-		i++;
-	}
-	int	*mask = calloc(sizeof(int), size);
+
+	for (int i = 0; i < size; i++)
+		set[i] = atoi(av[2 + i]);
+	int	*mask = calloc(1, sizeof(int) * size);
 	if (!mask)
 	{
-		free(s);
+		free(set);
 		return (1);
 	}
-	powerset(n, s, 0, mask, size);
-}
 
-void	powerset(int n, int *s, int i, int *mask, int size)
-{
-	int	sum = get_sum(s, mask, size);
-	if (sum == n)
-		print_subset(size, s, mask);
-	while (i < size)
-	{
-		mask[i] = 1;
-		powerset(n, s, i + 1, mask, size);
-		mask[i] = 0;
-		i++;
-	}
-}
-
-int	get_sum(int *s, int *mask, int size)
-{
-	int	sum = 0;
-	int i = 0;
-
-	while (i < size)
-	{
-		sum += mask[i] * s[i];
-		i++;
-	}
-	return (sum);
-}
-
-void	print_subset(int size, int *s, int *mask)
-{
-	int i = 0;
-	int first = 1;
-
-	while (i < size)
-	{
-		if (mask[i] && first)
-		{
-			printf("%i", s[i]);
-			first = 0;
-		}
-		else if (mask[i])
-		{
-			printf(" %i", s[i]);
-		}
-		i++;
-	}
-	printf("\n");
+	powerset(0, n, size, set, mask);
+	free(set);
+	free(mask);
 }
